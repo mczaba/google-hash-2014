@@ -46,6 +46,8 @@ let fillResult = () => {
 
 fillResult()
 
+fs.writeFileSync('output.txt', result.join('\n'))
+
 console.log(result.length)
 console.log(result)
 
