@@ -2,14 +2,23 @@ const fs = require("fs");
 
 const text = fs.readFileSync("./input_0.txt", "utf-8");
 const textByLine = text.split("\n");
-const [width, length] = textByLine.shift().split(",");
+const [drawingWidth, drawingLength] = textByLine.shift().split(",");
 const maparray = textByLine.map(line => line.split(""));
+
+const doneArray = [];
+for (let i = 0; i < drawingLength; i++) {
+  const line = [];
+  for (let j = 0; j < drawingWidth; j++) {
+    line.push(false);
+  }
+  doneArray.push(line);
+}
 
 const result = [];
 
 function checkSquare(i, j, size) {
   let result = true;
-  if (i + size > length || j + size > width) return false;
+  if (i + size > drawingLength || j + size > drawingWidth) return false;
   for (let k = 0; k < size; k++) {
     for (let l = 0; l < size; l++) {
       if (maparray[i + k][j + l] !== "#") result = false;
@@ -21,45 +30,32 @@ function checkSquare(i, j, size) {
 function clearSquare(i, j, size) {
   for (let k = 0; k < size; k++) {
     for (let l = 0; l < size; l++) {
-      maparray[i + k][j + l] = "*";
+      doneArray[i + k][j + l] = true;
     }
   }
 }
 
-function getMaxSizeByIndex(i, j) {
-    if (maparray[i][j] !== "#") return 0;
-    let size = 1;
-    while (checkSquare(i, j, size + 1)) {
-        size++;
-    }
-    return size;
+function treatPixel(i, j) {
+  let size = 1;
+  while (checkSquare(i, j, size + 1)) {
+    size++;
+  }
+  clearSquare(i, j, size);
+  return `FILL,${j},${i},${size}`;
 }
 
-function getMaxSquare() {
-    let sizeMap = new Map();
-    for (let i = 0; i < length; i++) {
-        for (let j = 0; j < width; j++) {
-            sizeMap.set([i, j], getMaxSizeByIndex(i, j));
-        }
+let fillResult = () => {
+  for (let i = 0; i < drawingLength; i++) {
+    for (let j = 0; j < drawingWidth; j++) {
+      if (maparray[i][j] === "#" && doneArray[i][j] === false)
+        result.push(treatPixel(i, j));
     }
-    const [index, size] = [...sizeMap.entries()].reduce((a, e) => e[1] > a[1] ? e : a);
-    return { index, size };
-}
-
-const fillResult = () => {
-    while(getMaxSquare().size > 0) {
-        const i = getMaxSquare().index[0]
-        const j = getMaxSquare().index[1]
-        const size = getMaxSquare().size
-        console.log(`FILL,${j},${i},${size}`)
-        result.push(`FILL,${j},${i},${size}`)
-        clearSquare(i,j,size)
-    }
-}
+  }
+};
 
 fillResult()
 
-console.log(result.length)
-console.log(result)
+console.log(result.length);
+console.log(result);
 
 fs.writeFileSync("output.txt", result.join("\n"));
